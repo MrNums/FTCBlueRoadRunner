@@ -13,11 +13,12 @@ public class MeepMeepTesting {
         RoadRunnerBotEntity myBot = new DefaultBotBuilder(meepMeep)
                 // Set bot constraints: maxVel, maxAccel, maxAngVel, maxAngAccel, track width
                 .setConstraints(60, 60, Math.toRadians(180), Math.toRadians(180), 100)
+                .setDimensions(16.3, 17.3)
                 .build();
 
-        myBot.runAction(myBot.getDrive().actionBuilder(new Pose2d(-23, -62, Math.toRadians(0)))
-                .strafeTo(new Vector2d(-60, -58))
-                .turn(Math.toRadians(49))
+        myBot.runAction(myBot.getDrive().actionBuilder(new Pose2d(-39, -62, Math.toRadians(90)))
+                .strafeTo(new Vector2d(-50.9, -51.4))
+                .turn(Math.toRadians(-45))
 
                 .build());
 

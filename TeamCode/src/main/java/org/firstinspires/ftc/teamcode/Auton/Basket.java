@@ -8,24 +8,30 @@ import com.acmerobotics.roadrunner.Vector2d;
 import com.acmerobotics.roadrunner.ftc.Actions;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.hardware.HardwareMap;
+
 import org.firstinspires.ftc.teamcode.MecanumDrive;
 
 @Autonomous(name = "4 Basket Auto", group = "Autonomous")
 public class Basket extends LinearOpMode {
 
     private MecanumDrive drive; // Declare drive as an instance variable
-    private ShoulderMovement shoulderMovement; // Declare shoulderMovement as an instance variable
-    private ElbowMovement elbowMovement; // Declare elbowMovement as an instance variable
-    private IntakeControl intakeControl; // Declare intakeControl as an instance variable
+
+    private ArmMech armMech;
+
+
 
 
     @Override
     public void runOpMode() throws InterruptedException {
-        Pose2d initialPose = new Pose2d(-23, -62, Math.toRadians(0));
+        Pose2d initialPose = new Pose2d(-39, -62, Math.toRadians(90));
         drive = new MecanumDrive(hardwareMap, initialPose); // Initialize drive
-        shoulderMovement = new ShoulderMovement(hardwareMap);
-        elbowMovement = new ElbowMovement(hardwareMap);
-        intakeControl = new IntakeControl(hardwareMap);
+
+        ArmMech arm = new ArmMech(hardwareMap);
+
+        armMech = new ArmMech(hardwareMap); // Change this line
+
+
 
 
         waitForStart();
@@ -47,11 +53,10 @@ public class Basket extends LinearOpMode {
                 new SequentialAction(
                         path1.build(),
                         new ParallelAction(
-                                shoulderMovement.shoulderToPosition(2000),
-                                elbowMovement.elbowToPosition(-500)
-                        ),
-                        intakeControl.intakeIn(),
-                        intakeControl.intakeStop()
+                        armMech.prepareToScore(),
+                        armMech.score()
+                        )
+
           //              path2.build(),
             //            path3.build(),
               //          path4.build(),
@@ -63,9 +68,9 @@ public class Basket extends LinearOpMode {
     }
 
     private TrajectoryActionBuilder basket1() {
-        return drive.actionBuilder(new Pose2d(-23, -62, Math.toRadians(0)))
-                .strafeTo(new Vector2d(-60, -58))
-                .turn(Math.toRadians(49));
+        return drive.actionBuilder(new Pose2d(-39, -62, Math.toRadians(90)))
+                .strafeTo(new Vector2d(-50.9, -51.4))
+                .turn(Math.toRadians(-45));
     }
 
   //  private TrajectoryActionBuilder basket2get(TrajectoryActionBuilder previousPath) {

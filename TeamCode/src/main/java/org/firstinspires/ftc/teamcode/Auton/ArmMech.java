@@ -55,9 +55,9 @@ public class ArmMech {
             case "intake":
                 elbowTarget = AutonSettings.ELBOW_INTAKE_POS;
                 shoulderTarget = AutonSettings.SHOULDER_INTAKE_POS;
-                intake.setPower(1.0); // Inaktes
+                intake.setPower(1.0); // Intake
                 break;
-            case "prep_sccore_high":
+            case "prep_score_high": // Ensure this matches your intended state
                 elbowTarget = AutonSettings.ELBOW_SCORE_HIGH_POS;
                 shoulderTarget = AutonSettings.SHOULDER_SCORE_HIGH_POS;
                 intake.setPower(0.2); // Holding
@@ -76,6 +76,11 @@ public class ArmMech {
                 elbowTarget = AutonSettings.ELBOW_START_POS;
                 shoulderTarget = AutonSettings.SHOULDER_START_POS;
                 intake.setPower(0.2); // Holding
+                break;
+            case "scorehigh": // Add this case
+                elbowTarget = AutonSettings.ELBOW_SCORE_HIGH_POS; // Set the appropriate position
+                shoulderTarget = AutonSettings.SHOULDER_SCORE_HIGH_POS; // Set the appropriate position
+                intake.setPower(0.2); // Adjust power as needed
                 break;
             default:
                 throw new IllegalArgumentException("Unknown arm state: " + state);
@@ -104,6 +109,7 @@ public class ArmMech {
             }
         };
     }
+
     public Action prepareToScore() {
         return moveToState("scorehigh");
     }
