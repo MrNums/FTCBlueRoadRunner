@@ -16,9 +16,11 @@ public class MeepMeepTesting {
                 .setDimensions(16.3, 17.3)
                 .build();
 
-        myBot.runAction(myBot.getDrive().actionBuilder(new Pose2d(-39, -62, Math.toRadians(90)))
+        myBot.runAction(myBot.getDrive().actionBuilder(new Pose2d(-39, -62, Math.toRadians(-90)))
                 .strafeTo(new Vector2d(-50.9, -51.4))
                 .turn(Math.toRadians(-45))
+                .strafeTo(new Vector2d(-34, -35))
+                .turn(Math.toRadians(100))
 
                 .build());
 

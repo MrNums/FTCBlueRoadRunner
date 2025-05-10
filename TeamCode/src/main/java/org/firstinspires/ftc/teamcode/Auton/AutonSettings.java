@@ -23,7 +23,7 @@ public class AutonSettings {
     public static final int SPECIMEN_WALL_LIFT = 200;
     public static final int SPECIMEN_LOW_CLIP = 0;
     public static final int SPECIMEN_LOW_EJECT = 0;
-    public static final int SPECIMEN_HIGH = 1100;
+    public static final int SPECIMEN_HIGH = 1300;
     public static final int SPECIMEN_HIGH_CLIP = 820;
     public static final int SPECIMEN_HIGH_EJECT = 820;
     public static final int SPECIMEN_TOLERANCE = 10;

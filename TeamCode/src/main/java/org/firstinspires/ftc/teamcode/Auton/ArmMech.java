@@ -57,7 +57,7 @@ public class ArmMech {
                 shoulderTarget = AutonSettings.SHOULDER_INTAKE_POS;
                 intake.setPower(1.0); // Intake
                 break;
-            case "prep_score_high": // Ensure this matches your intended state
+            case "prep_score_high":
                 elbowTarget = AutonSettings.ELBOW_SCORE_HIGH_POS;
                 shoulderTarget = AutonSettings.SHOULDER_SCORE_HIGH_POS;
                 intake.setPower(0.2); // Holding
@@ -77,10 +77,10 @@ public class ArmMech {
                 shoulderTarget = AutonSettings.SHOULDER_START_POS;
                 intake.setPower(0.2); // Holding
                 break;
-            case "scorehigh": // Add this case
-                elbowTarget = AutonSettings.ELBOW_SCORE_HIGH_POS; // Set the appropriate position
-                shoulderTarget = AutonSettings.SHOULDER_SCORE_HIGH_POS; // Set the appropriate position
-                intake.setPower(0.2); // Adjust power as needed
+            case "scorehigh": // Same as prep_score_high for compatibility
+                elbowTarget = AutonSettings.ELBOW_SCORE_HIGH_POS;
+                shoulderTarget = AutonSettings.SHOULDER_SCORE_HIGH_POS;
+                intake.setPower(0.2); // Holding
                 break;
             default:
                 throw new IllegalArgumentException("Unknown arm state: " + state);
@@ -88,30 +88,54 @@ public class ArmMech {
 
         final int finalElbow = elbowTarget;
         final int finalShoulder = shoulderTarget;
+        final String currentState = state.toLowerCase();
 
         return new Action() {
             @Override
             public boolean run(@NonNull TelemetryPacket packet) {
                 elbow.setTargetPosition(finalElbow);
                 shoulder.setTargetPosition(finalShoulder);
-                elbow.setPower(1.0);
-                shoulder.setPower(1.0);
+
+                // For hold state "scorehigh" and "prep_score_high" keep power on a small level to hold position
+                // For "home" and others, use regular power while busy and cut power when reached
+
+                boolean busy = elbow.isBusy() || shoulder.isBusy();
+
+                if (busy) {
+                    // While moving, set full power to motors to get to the position efficiently
+                    elbow.setPower(1.0);
+                    shoulder.setPower(1.0);
+                } else {
+                    // When at target, decide power based on state
+                    if (currentState.equals("scorehigh") || currentState.equals("prep_score_high")) {
+                        // Hold position with small holding power
+                        elbow.setPower(0.2);
+                        shoulder.setPower(0.2);
+                    } else {
+                        // Cut power to save energy when not holding position
+                        elbow.setPower(0);
+                        shoulder.setPower(0);
+                    }
+                }
 
                 packet.put("Elbow Pos", elbow.getCurrentPosition());
                 packet.put("Shoulder Pos", shoulder.getCurrentPosition());
+                packet.put("Motor busy", busy);
 
-                boolean busy = elbow.isBusy() || shoulder.isBusy();
-                if (!busy) {
-                    elbow.setPower(0);
-                    shoulder.setPower(0);
-                }
-                return busy;
+                return busy; // Return true while busy (Action ongoing), false when reached and holding or powered off
             }
         };
     }
 
     public Action prepareToScore() {
         return moveToState("scorehigh");
+    }
+
+    public Action Home() {
+        return moveToState("home");
+    }
+    public Action intake() {
+        return moveToState("intake");
     }
 
     public Action score() {
@@ -121,20 +145,19 @@ public class ArmMech {
             @Override
             public boolean run(@NonNull TelemetryPacket packet) {
                 if (startTime == -1) {
-                    intake.setPower(-1.0); // Outtake
+                    intake.setPower(-1.0); // Start outtake
                     startTime = System.currentTimeMillis();
                 }
 
+                // Run for 2.5 seconds
                 long elapsed = System.currentTimeMillis() - startTime;
-
-                if (elapsed >= 500) { // 0.5 seconds
-                    intake.setPower(0);
-                    moveToState("home").run(packet);
-                    return false;
+                if (elapsed >= 1500) {
+                    intake.setPower(0); // Stop motor
+                    return true;        // Action complete
                 }
-                return true;
+                return false;           // Action still running
             }
         };
     }
-
 }
+

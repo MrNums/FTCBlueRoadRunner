@@ -17,7 +17,6 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
-
 import org.firstinspires.ftc.teamcode.TeleOpParameters;
 import org.firstinspires.ftc.teamcode.Auton.AutonSettings;
 
@@ -26,6 +25,7 @@ public class SpecMech {
     private CRServo specLServo, specRServo;
 
     public SpecMech(HardwareMap hardwareMap) {
+        // Initialize the specimen motor and servos
         specimen = hardwareMap.get(DcMotorEx.class, "spec");
         specimen.setDirection(TeleOpParameters.SPECIMEN_DIRECTION);
         specimen.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
@@ -37,6 +37,7 @@ public class SpecMech {
         specRServo = hardwareMap.get(CRServo.class, "specRServo");
     }
 
+    // Move the specimen to a specified state
     public Action moveToState(String state) {
         int specimenTarget;
 
@@ -57,6 +58,7 @@ public class SpecMech {
         return moveToSpecimenPosition(specimenTarget);
     }
 
+    // Move the specimen to a specific position
     public Action moveToSpecimenPosition(int target) {
         return packet -> {
             specimen.setTargetPosition(target);
@@ -66,56 +68,67 @@ public class SpecMech {
 
             if (!specimen.isBusy()) {
                 specimen.setPower(0);
-                return false;
+                return false; // Action complete
             }
 
-            return true;
+            return true; // Action still in progress
         };
     }
 
+    // Prepare the intake mechanism
     public Action prepIntake() {
         return new SequentialAction(
                 moveToSpecimenPosition(AutonSettings.SPECIMEN_WALL),
                 (TelemetryPacket packet) -> {
                     specLServo.setPower(1.0);
                     specRServo.setPower(-1.0);
-                    return false;
+                    return false; // Action still in progress
                 },
                 moveToSpecimenPosition(AutonSettings.SPECIMEN_WALL_LIFT),
                 (TelemetryPacket packet) -> {
                     specLServo.setPower(0);
                     specRServo.setPower(0);
-                    return false;
+                    return false; // Action complete
                 }
         );
     }
 
-    public Action scoreHigh() {
+    // Move to the high position
+    public Action moveToHigh() {
+        return moveToSpecimenPosition(AutonSettings.SPECIMEN_HIGH);
+    }
+
+    // Move down to clip and release, keeping servos running during sleep
+    public Action clipAndRelease() {
         return new SequentialAction(
-                moveToSpecimenPosition(AutonSettings.SPECIMEN_HIGH),
                 moveToSpecimenPosition(AutonSettings.SPECIMEN_HIGH_CLIP),
-                new SleepAction(1.0),
                 packet -> {
                     specLServo.setPower(-1.0);
                     specRServo.setPower(1.0);
-                    return false;
+                    return false; // step done: servos powered on
                 },
-                new SleepAction(0.5),
+                new SleepAction(1.5), // this waits 1.5 seconds while servos run
                 packet -> {
                     specLServo.setPower(0);
                     specRServo.setPower(0);
-                    return false;
-                },
-                moveToSpecimenPosition(AutonSettings.SPECIMEN_HOME)
+                    return false; // stop servos, step done
+                }
         );
     }
+
+
+    // Return to home position
+    public Action returnHome() {
+        return moveToSpecimenPosition(AutonSettings.SPECIMEN_HOME);
+    }
+
+    // Stop the specimen servos
     private Action stopSpecimenServos() {
         return packet -> {
             specLServo.setPower(0);
             specRServo.setPower(0);
-            return false;
+            return false; // Action complete
         };
     }
-
 }
 
